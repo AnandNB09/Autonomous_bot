@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- === Reusable Physics Constants === -->
+  <xacro:property name="wheel_mu" value="1.0"/>
+  <xacro:property name="caster_mu" value="0.1"/>
+
+  <xacro:property name="kp_wheel" value="1000000"/>
+  <xacro:property name="kd_wheel" value="10"/>
+
+  <xacro:property name="kp_caster" value="100000"/>
+  <xacro:property name="kd_caster" value="100"/>
+
+  <xacro:property name="min_depth" value="0.001"/>
+  <xacro:property name="max_vel" value="0.2"/>
+
+  <!-- === Diff Drive Plugin (Ignition Compatible) === -->
+  <gazebo>
+    
+
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <!-- Remove <ros> tag. -->
+
+      <!-- wheels -->
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+
+      <!-- kinematics -->
+      <wheel_separation>0.202</wheel_separation>
+      <wheel_radius>0.033</wheel_radius> <!-- computed from <wheel_diameter> in the original plugin-->
+
+      <!-- limits -->
+      <max_linear_acceleration>0.33</max_linear_acceleration> <!-- computed from <max_linear_acceleration> in the original plugin-->
+
+      <topic>cmd_vel</topic> <!-- from <commant_topic> -->
+
+      <odom_topic>odom</odom_topic> <!-- from <odometry_topic> -->
+      <frame_id>odom</frame_id> <!-- from <odometry_frame> -->
+      <child_frame_id>base_footprint</child_frame_id> <!-- from <robot_base_frame> -->
+      <odom_publisher_frequency>30</odom_publisher_frequency> <!-- from <update_rate>-->
+
+      <tf_topic>/tf</tf_topic> <!-- Short topic name for tf output -->
+
+     
+    </plugin>
+    <plugin filename="gz-sim-joint-state-publisher-system"
+      name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic> <!--from <ros><remapping> -->
+      <joint_name>left_wheel_joint</joint_name>
+      <joint_name>right_wheel_joint</joint_name>
+    </plugin>
+
+
+    <xacro:macro name="arrow_plugin" params="keycode lin_x ang_z">
+      <plugin filename="gz-sim-triggered-publisher-system"
+          name="gz::sim::systems::TriggeredPublisher">
+          
+          <input type="gz.msgs.Int32" topic="/keyboard/keypress">
+              <match field="data">${keycode}</match>
+          </input>
+          <output type="gz.msgs.Twist" topic="/cmd_vel">
+              linear: {x: ${lin_x}}, angular: {z: ${ang_z}}
+          </output>
+      </plugin>
+    </xacro:macro>
+    <xacro:arrow_plugin keycode="16777237" lin_x="-0.5" ang_z="0.0" />
+    <xacro:arrow_plugin keycode="16777235" lin_x="0.5" ang_z="0.0"/>
+    <xacro:arrow_plugin keycode="16777234" lin_x="0.0" ang_z="0.5" />
+    <xacro:arrow_plugin keycode="16777236" lin_x="0.0" ang_z="-0.5" />
+    <xacro:arrow_plugin keycode="83" lin_x="0.0" ang_z="0.0" />   
+
+  </gazebo>
+ 
+
+  
+
+  <!-- === Wheel Physics (Left & Right) === -->
+  <gazebo reference="left_wheel_link">
+    <mu1>${wheel_mu}</mu1>
+    <mu2>${wheel_mu}</mu2>
+    <kp>${kp_wheel}</kp>
+    <kd>${kd_wheel}</kd>
+    <minDepth>${min_depth}</minDepth>
+    <maxVel>${max_vel}</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <gazebo reference="right_wheel_link">
+    <mu1>${wheel_mu}</mu1>
+    <mu2>${wheel_mu}</mu2>
+    <kp>${kp_wheel}</kp>
+    <kd>${kd_wheel}</kd>
+    <minDepth>${min_depth}</minDepth>
+    <maxVel>${max_vel}</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <!-- === Caster Physics (Front & Rear) === -->
+  <gazebo reference="front_caster_link">
+    <mu1>${caster_mu}</mu1>
+    <mu2>${caster_mu}</mu2>
+    <kp>${kp_caster}</kp>
+    <kd>${kd_caster}</kd>
+    <minDepth>${min_depth}</minDepth>
+    <maxVel>${max_vel}</maxVel>
+  </gazebo>
+
+  <gazebo reference="rear_caster_link">
+    <mu1>${caster_mu}</mu1>
+    <mu2>${caster_mu}</mu2>
+    <kp>${kp_caster}</kp>
+    <kd>${kd_caster}</kd>
+    <minDepth>${min_depth}</minDepth>
+    <maxVel>${max_vel}</maxVel>
+  </gazebo>
+
+</robot>
