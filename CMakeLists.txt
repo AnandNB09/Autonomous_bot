@@ -9,10 +9,12 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(xacro REQUIRED)
+find_package(slam_toolbox REQUIRED)
+find_package(nav2_map_server REQUIRED)
 
 
 
-install(DIRECTORY launch meshes params rviz urdf worlds
+install(DIRECTORY launch meshes params rviz urdf worlds custom_world
   DESTINATION share/${PROJECT_NAME}/
 )
 

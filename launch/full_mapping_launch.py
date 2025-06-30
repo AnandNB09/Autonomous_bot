@@ -1,28 +1,24 @@
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, DeclareLaunchArgument
 from launch_ros.actions import Node
-from launch.substitutions import Command, LaunchConfiguration
+from launch.actions import ExecuteProcess
+from launch.substitutions import Command
 from launch_ros.parameter_descriptions import ParameterValue
-from ament_index_python.packages import get_package_share_directory
 import os
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-
-    # File paths
     pkg_path = get_package_share_directory('slam_nav2_bot')
     xacro_file = os.path.join(pkg_path, 'urdf', 'slam_nav2_bot.urdf.xacro')
     world_file = os.path.join(pkg_path, 'worlds', 'empty.world')
-    rviz_file = os.path.join(pkg_path, 'rviz', 'display.rviz')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-
+    rviz_file = os.path.join(pkg_path, 'rviz', 'bot_display.rviz')
+    
     robot_name = 'slam_bot'
-
-    # Convert XACRO to URDF
-    robot_description_content = ParameterValue(
+    robot_description = ParameterValue(
         Command(['xacro ', xacro_file]),
         value_type=str
     )
-    robot_description = {'robot_description': robot_description_content}
+
+    
 
     # Start Gazebo Harmonic
     gazebo = ExecuteProcess(
@@ -68,44 +64,34 @@ def generate_launch_description():
         output='screen'
     )
 
-    # Joint state publisher GUI
-    joint_state_publisher = Node(
-        package="joint_state_publisher_gui",
-        executable="joint_state_publisher_gui",
-        name="joint_state_publisher",
-        parameters=[{'use_sim_time': use_sim_time}]
-    )
-
-    # Robot state publisher
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        output='screen',
-        parameters=[
-            robot_description,
-            {'use_sim_time': use_sim_time}
-        ]
-    )
-
-    # RViz2 visualization
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="screen",
-        arguments=["-d", rviz_file],
-        parameters=[{'use_sim_time': use_sim_time}]
-    )
-
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='True'),
-        gazebo,
-        start_gazebo_ros_bridge_cmd,
-        start_gazebo_ros_image_bridge_cmd,
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            parameters=[{'robot_description': robot_description, 'use_sim_time': True}]
+        ),
+        Node(
+            package='joint_state_publisher_gui',
+            executable='joint_state_publisher_gui',
+            parameters=[{'use_sim_time': True}]
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            arguments=["-d", rviz_file],
+            parameters=[{'use_sim_time': True}]
+        ),
+        
+        # Map Saver Server
+        Node(
+            package='nav2_map_server',
+            executable='map_saver_server',
+            name='map_saver',
+            output='screen',
+            parameters=[{'use_sim_time': True}]
+        ),
         spawn_entity,
-        joint_state_publisher,
-        robot_state_publisher,
-        rviz_node
+        start_gazebo_ros_image_bridge_cmd,
+        start_gazebo_ros_bridge_cmd,
+        gazebo
     ])

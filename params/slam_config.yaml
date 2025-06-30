@@ -1,0 +1,19 @@
+slam_toolbox:
+  ros__parameters:
+    use_sim_time: true
+    mode: "mapping"
+    map_update_interval: 2.0
+    resolution: 0.05
+    max_laser_range: 8.0
+
+    # Add these commonly required parameters:
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan         # Change if your topic is different
+    publish_map_to_odom: true
+    publish_tf_map: true
+
+    # Optionally, for more robust operation:
+    publish_pose: true
+    map_start_pose: [0.0, 0.0, 0.0]

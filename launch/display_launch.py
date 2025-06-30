@@ -17,9 +17,7 @@ def generate_launch_description():
         Command(['xacro ', xacro_file]),
         value_type=str
     )
-
     
-
     # Start Gazebo Harmonic
     gazebo = ExecuteProcess(
         cmd=['gz', 'sim', '-r', world_file],
@@ -81,6 +79,7 @@ def generate_launch_description():
             arguments=["-d", rviz_file],
             parameters=[{'use_sim_time': True}]
         ),
+        
         spawn_entity,
         start_gazebo_ros_image_bridge_cmd,
         start_gazebo_ros_bridge_cmd,
